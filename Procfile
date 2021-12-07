@@ -1,0 +1,1 @@
+web: java -jar build/libs/contentmanager-0.0.1-SNAPSHOT-plain.jar --server.port=$PORT
