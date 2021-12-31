@@ -1,0 +1,10 @@
+runtime: java11
+env: standard
+instance_class: F4
+automatic_scaling:
+  min_idle_instances: automatic
+  max_idle_instances: automatic
+  min_pending_latency: automatic
+  max_pending_latency: automatic
+network: {}
+service_account: marine-compound-336602@appspot.gserviceaccount.com

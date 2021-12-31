@@ -10,5 +10,5 @@ data class Blog(
     @JsonProperty
     val publishDate: String,
     @JsonProperty
-    val content: String,
+    val content: List<Content>,
 )

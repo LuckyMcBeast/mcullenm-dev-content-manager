@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class BlogController(
     val blogService : BlogService
 ) {
+    @CrossOrigin("*")
     @GetMapping
     fun getBlogs() = blogService.getBlogs()
 }
