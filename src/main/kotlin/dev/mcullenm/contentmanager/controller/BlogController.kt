@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/blogs")
 class BlogController(
-    val blogService : BlogService
+    val blogService: BlogService
 ) {
     @CrossOrigin("*")
     @GetMapping
