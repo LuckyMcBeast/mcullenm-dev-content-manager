@@ -8,4 +8,5 @@ class BlogService(
     val blogDataSource: BlogDataSource
 ) {
     fun getBlogs() = blogDataSource.retrieveBlogs()
+    fun getBlog(id: Int) = blogDataSource.retrieveBlog(id)
 }

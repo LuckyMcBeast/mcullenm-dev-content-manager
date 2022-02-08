@@ -23,4 +23,9 @@ class FastApiBlogDataSource(
         }
         return blogList
     }
+
+    override fun retrieveBlog(id: Int): Blog? {
+        val response = fastApiRestTemplate.getForEntity("blog/$id/view", String::class.java)
+        return Blog.from(ObjectMapper().readTree(response.body) as ObjectNode)
+    }
 }

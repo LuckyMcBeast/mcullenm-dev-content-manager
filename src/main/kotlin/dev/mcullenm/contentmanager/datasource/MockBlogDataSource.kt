@@ -25,4 +25,11 @@ class MockBlogDataSource : BlogDataSource {
     override fun retrieveBlogs(): Collection<Blog> {
         return blogs
     }
+
+    override fun retrieveBlog(id: Int): Blog? {
+        if (id <= 0) {
+            return null
+        }
+        return blogs[id - 1]
+    }
 }

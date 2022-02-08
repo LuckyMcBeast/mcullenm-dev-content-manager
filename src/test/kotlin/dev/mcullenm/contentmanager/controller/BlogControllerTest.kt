@@ -1,31 +1,46 @@
 package dev.mcullenm.contentmanager.controller
 
+import com.nhaarman.mockitokotlin2.whenever
+import dev.mcullenm.contentmanager.model.Blog
+import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.service.BlogService
+import org.assertj.core.api.AssertionsForClassTypes.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 
-@SpringBootTest
-@AutoConfigureMockMvc
-internal class BlogControllerTest @Autowired constructor(
-    private val mockMvc: MockMvc
-) {
-    private val blogsEndpoint = "/api/blogs"
+internal class BlogControllerTest {
+
+    @InjectMocks
+    lateinit var blogController: BlogController
+
+    @Mock
+    lateinit var blogService: BlogService
+
+    @BeforeEach
+    fun setup() {
+        MockitoAnnotations.openMocks(this)
+    }
 
     @Test
-    fun `should return list of all blogs`() {
-        mockMvc.get(blogsEndpoint)
-            .andDo { print() }
-            .andExpect {
-                status { isOk() }
-                content { MediaType.APPLICATION_JSON }
-                jsonPath("$[0].blogId") { value(1) }
-                jsonPath("$[1].blogId") { value(3) }
-                jsonPath("$[2].blogId") { value(4) }
-                jsonPath("$[3].blogId") { value(5) }
-            }
+    fun `should get blogs from from blogService`() {
+        val blogs = listOf<Blog>()
+        whenever(blogService.getBlogs()).thenReturn(blogs)
+
+        val actual = blogController.getBlogs()
+
+        assertThat(actual).isEqualTo(blogs)
+    }
+
+    @Test
+    fun `should get a blog from blogService by id`() {
+        val blog = Blog(1, "Test", "date", listOf<Content>())
+        whenever(blogService.getBlog(1)).thenReturn(blog)
+
+        val actual = blogController.getBlog(1)
+
+        assertThat(actual).isEqualTo(blog).usingRecursiveComparison()
     }
 }

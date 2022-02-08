@@ -1,6 +1,8 @@
 package dev.mcullenm.contentmanager.service
 
 import dev.mcullenm.contentmanager.datasource.MockBlogDataSource
+import dev.mcullenm.contentmanager.model.Blog
+import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
@@ -28,8 +30,16 @@ internal class BlogServiceTest {
 
     @Test
     fun `should getBlogs from Datasource`() {
-        blogService.getBlogs()
+        val actual = blogService.getBlogs()
 
         verify(mockBlogDataSource).retrieveBlogs()
+        assertThat(actual).isEqualTo(listOf<Blog>())
+    }
+
+    @Test
+    fun `should getBlog from Datasource`() {
+        blogService.getBlog(1)
+
+        verify(mockBlogDataSource).retrieveBlog(1)
     }
 }
