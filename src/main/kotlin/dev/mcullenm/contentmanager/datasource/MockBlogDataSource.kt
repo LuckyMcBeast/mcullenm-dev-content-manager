@@ -2,7 +2,10 @@ package dev.mcullenm.contentmanager.datasource
 
 import dev.mcullenm.contentmanager.model.Blog
 import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
+import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime.now
 
 @Repository("Mock")
 class MockBlogDataSource : BlogDataSource {
@@ -31,5 +34,11 @@ class MockBlogDataSource : BlogDataSource {
             return null
         }
         return blogs[id - 1]
+    }
+
+    override fun createBlog(createBlogRequest: CreateBlogRequest): CreateBlogResponse? {
+        val blog = Blog(blogs.size + 1, createBlogRequest.title, now().toString(), createBlogRequest.content)
+        blogs.add(blog)
+        return CreateBlogResponse(true, blog.blogId, blog.content.size)
     }
 }

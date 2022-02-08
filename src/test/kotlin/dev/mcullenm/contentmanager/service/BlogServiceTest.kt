@@ -2,6 +2,7 @@ package dev.mcullenm.contentmanager.service
 
 import dev.mcullenm.contentmanager.datasource.MockBlogDataSource
 import dev.mcullenm.contentmanager.model.Blog
+import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -41,5 +42,13 @@ internal class BlogServiceTest {
         blogService.getBlog(1)
 
         verify(mockBlogDataSource).retrieveBlog(1)
+    }
+
+    @Test
+    fun `should createBlog via Datasource`() {
+        val createBlogRequest = CreateBlogRequest("Test", listOf())
+        blogService.postBlog(createBlogRequest)
+
+        verify(mockBlogDataSource).createBlog(createBlogRequest)
     }
 }

@@ -3,8 +3,10 @@ package dev.mcullenm.contentmanager.datasource
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.whenever
-import dev.mcullenm.contentmanager.model.Content
 import dev.mcullenm.contentmanager.model.Blog
+import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
+import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,7 +17,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
-
+import org.springframework.web.client.postForEntity
 
 internal class FastApiBlogDataSourceTest {
 
@@ -40,7 +42,7 @@ internal class FastApiBlogDataSourceTest {
             )
         val expected = mutableListOf(
             Blog
-                (
+            (
                 1, "Test", "2022-01-13 06:10:58.632369",
                 listOf(
                     Content(0, "p", "This is some content"),
@@ -48,7 +50,7 @@ internal class FastApiBlogDataSourceTest {
                 )
             ),
             Blog
-                (
+            (
                 2, "Test", "2022-01-13 06:10:58.632369",
                 listOf(
                     Content(0, "p", "This is some content"),
@@ -79,6 +81,20 @@ internal class FastApiBlogDataSourceTest {
         )
 
         val actual = fastApiBlogDataSource.retrieveBlog(1)
+
+        assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `should create blog from createBlogRequest`() {
+        val createBlogRequest = CreateBlogRequest("Test", listOf())
+        val expected = CreateBlogResponse(true, 1, 0)
+        whenever(fastApiRestTemplate.postForEntity(any<String>(), eq(createBlogRequest), eq(CreateBlogResponse::class.java)))
+            .thenReturn(
+                ResponseEntity(expected, HttpStatus.OK)
+            )
+
+        val actual = fastApiBlogDataSource.createBlog(createBlogRequest)
 
         assertThat(actual).isEqualTo(expected)
     }

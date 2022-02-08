@@ -7,6 +7,8 @@ import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.whenever
 import dev.mcullenm.contentmanager.model.Blog
 import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
+import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -19,6 +21,7 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
 
@@ -87,13 +90,47 @@ internal class BlogControllerIntegrationTest {
 
         assertThat(blog).isEqualTo(
             Blog
-                (
+            (
                 1, "Test", "2022-01-13 06:10:58.632369",
                 listOf(
                     Content(0, "p", "This is some content"),
                     Content(1, "p", "This is some content")
                 )
             )
+        )
+    }
+
+    @Test
+    fun `should create blog`() {
+        val requestString = """{"title": "Test", "content": [{"position": 0, "type": "p","value": "This is some content"},{"position": 1, "type": "p", "value": "This is some content"}]}"""
+        val response = CreateBlogResponse(true, 1, 2)
+        whenever(fastApiRestTemplate.postForEntity(any<String>(), any<CreateBlogRequest>(), eq(CreateBlogResponse::class.java)))
+            .thenReturn(
+                ResponseEntity(response, HttpStatus.OK)
+            )
+
+        val postBlogResponse = mockMvc.post(blogsEndpoint) {
+            content = requestString
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.success") { value(true) }
+            }
+            .andReturn().response.contentAsString
+
+        val createBlogResponse = (ObjectMapper().readTree(postBlogResponse) as ObjectNode).createBlogResponseObject()
+
+        assertThat(response).isEqualTo(createBlogResponse)
+    }
+
+    private fun ObjectNode.createBlogResponseObject(): CreateBlogResponse {
+        return CreateBlogResponse(
+            success = this["success"].asBoolean(),
+            createdId = this["createdId"].asInt(),
+            contentAmount = this["contentAmount"].asInt()
         )
     }
 

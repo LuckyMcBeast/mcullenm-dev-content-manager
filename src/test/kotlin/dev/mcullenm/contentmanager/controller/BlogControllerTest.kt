@@ -3,6 +3,8 @@ package dev.mcullenm.contentmanager.controller
 import com.nhaarman.mockitokotlin2.whenever
 import dev.mcullenm.contentmanager.model.Blog
 import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
+import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
 import dev.mcullenm.contentmanager.service.BlogService
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -42,5 +44,16 @@ internal class BlogControllerTest {
         val actual = blogController.getBlog(1)
 
         assertThat(actual).isEqualTo(blog).usingRecursiveComparison()
+    }
+
+    @Test
+    fun `should create blog with blogService`() {
+        val createBlogRequest = CreateBlogRequest("Test", listOf())
+        val createBlogResponse = CreateBlogResponse(true, 1, 0)
+        whenever(blogService.postBlog(createBlogRequest)).thenReturn(createBlogResponse)
+
+        val actual = blogController.postBlog(createBlogRequest)
+
+        assertThat(actual).isEqualTo(createBlogResponse)
     }
 }
