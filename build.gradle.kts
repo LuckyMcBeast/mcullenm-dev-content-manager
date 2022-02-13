@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.mcullenm"
-version = "0.0.2-SNAPSHOT"
+version = "0.1.0"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
