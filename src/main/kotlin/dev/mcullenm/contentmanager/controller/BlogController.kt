@@ -1,17 +1,15 @@
 package dev.mcullenm.contentmanager.controller
 
 import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
+import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
+import dev.mcullenm.contentmanager.model.response.DeleteBlogResponse
 import dev.mcullenm.contentmanager.service.BlogService
-import org.springframework.web.bind.annotation.CrossOrigin
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @RestController
-@RequestMapping("/api/blog")
+@RequestMapping("/blogs")
 class BlogController(
     val blogService: BlogService
 ) {
@@ -24,5 +22,24 @@ class BlogController(
     fun getBlog(@PathVariable id: Int) = blogService.getBlog(id)
 
     @PostMapping
-    fun postBlog(@RequestBody createBlogRequest: CreateBlogRequest) = blogService.postBlog(createBlogRequest)
+    fun postBlog(
+        @RequestBody createBlogRequest: CreateBlogRequest,
+        @RequestParam creationDate: String? = null
+    ): CreateBlogResponse? {
+        try {
+            return blogService.postBlog(
+                createBlogRequest,
+                creationDate?.let { LocalDate.parse(creationDate, DateTimeFormatter.ISO_LOCAL_DATE) }
+            )
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    @PutMapping("/{id}")
+    fun putBlog(@PathVariable id: Int, @RequestBody createBlogRequest: CreateBlogRequest) =
+        blogService.updateBlog(id, createBlogRequest)
+
+    @DeleteMapping("/{id}")
+    fun deleteBlog(@PathVariable id: Int): DeleteBlogResponse = blogService.deleteBlog(id)
 }

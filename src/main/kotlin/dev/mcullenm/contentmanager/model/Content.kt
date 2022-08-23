@@ -1,7 +1,7 @@
 package dev.mcullenm.contentmanager.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.node.ObjectNode
+import dev.mcullenm.contentmanager.repository.entity.ContentEntity
 
 data class Content(
     @JsonProperty
@@ -12,12 +12,16 @@ data class Content(
     val value: String
 ) {
     companion object {
-        fun from(node: ObjectNode): Content {
+        fun fromEntity(contentEntity: ContentEntity): Content {
             return Content(
-                node["position"].asInt(),
-                node["type"].textValue(),
-                node["value"].textValue()
+                position = contentEntity.position,
+                type = contentEntity.type,
+                value = contentEntity.value
             )
         }
     }
+}
+
+fun List<Content>.toContentEntityList(blogId: Int): List<ContentEntity> {
+    return this.map { content -> ContentEntity.from(blogId, content) }
 }

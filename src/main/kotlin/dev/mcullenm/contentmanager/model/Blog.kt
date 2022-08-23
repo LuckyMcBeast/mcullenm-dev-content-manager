@@ -1,32 +1,28 @@
 package dev.mcullenm.contentmanager.model
 
-import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.node.ObjectNode
+import dev.mcullenm.contentmanager.repository.entity.BlogEntity
+import java.time.LocalDate
 
 data class Blog(
     @JsonProperty
-    @JsonAlias("blog_id")
-    val blogId: Int,
+    val blogId: Int?,
     @JsonProperty
     val title: String,
     @JsonProperty
-    @JsonAlias("publish_date")
-    val publishDate: String,
+    @JsonFormat(pattern = "MM-dd-yyyy")
+    var publishDate: LocalDate?,
     @JsonProperty
     val content: List<Content>,
 ) {
     companion object {
-        fun from(node: ObjectNode): Blog {
-            val contentList: MutableList<Content> = mutableListOf()
-            for (content in node["content"]) {
-                contentList.add(Content.from(content as ObjectNode))
-            }
+        fun fromEntity(blogEntity: BlogEntity, content: List<Content>): Blog {
             return Blog(
-                node["blog_id"].asInt(),
-                node["title"].textValue(),
-                node["publish_date"].textValue(),
-                contentList
+                blogId = blogEntity.id,
+                title = blogEntity.title,
+                publishDate = blogEntity.publishDate,
+                content = content,
             )
         }
     }

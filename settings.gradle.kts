@@ -1,1 +1,1 @@
-rootProject.name = "contentmanager"
+rootProject.name = "content-manager"

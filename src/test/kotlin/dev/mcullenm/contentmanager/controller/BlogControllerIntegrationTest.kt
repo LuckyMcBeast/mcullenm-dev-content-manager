@@ -2,112 +2,113 @@ package dev.mcullenm.contentmanager.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.eq
-import com.nhaarman.mockitokotlin2.whenever
-import dev.mcullenm.contentmanager.model.Blog
 import dev.mcullenm.contentmanager.model.Content
 import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
 import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
+import dev.mcullenm.contentmanager.model.response.DeleteBlogResponse
+import dev.mcullenm.contentmanager.repository.BlogRepositoryAdapter
 import org.assertj.core.api.AssertionsForClassTypes.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForEntity
+import org.springframework.test.web.servlet.*
+import java.time.LocalDate
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // Uses and requires active PostgresDB
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 internal class BlogControllerIntegrationTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    private val blogsEndpoint = "/api/blog"
+    @Autowired
+    private lateinit var blogRepositoryAdapter: BlogRepositoryAdapter
 
-    @MockBean
-    private lateinit var fastApiRestTemplate: RestTemplate
+    private val blogsEndpoint = "/blogs"
+
+    @BeforeEach
+    @AfterEach
+    fun resetDatabase() {
+        blogRepositoryAdapter.blogRepository.deleteAll()
+        blogRepositoryAdapter.contentRepository.deleteAll()
+        blogRepositoryAdapter.blogRepository.resetSequence() // next blogId will be 2
+    }
 
     @Test
     fun `should return list of all blogs`() {
-        val responseString =
-            """[{"blog_id":1,"title":"Test","publish_date":"2022-01-13 06:10:58.632369","content":[{"position":0,"type":"p","value":"This is some content"},{"position":1,"type":"p","value":"This is some content"}]},{"blog_id":2,"title":"Test","publish_date":"2022-01-13 06:10:58.632369","content":[{"position":0,"type":"p","value":"This is some content"},{"position":1,"type":"p","value":"This is some content"}]}]"""
-        val blogCollection = mutableListOf<Blog>()
-        whenever(fastApiRestTemplate.getForEntity(any<String>(), eq(String::class.java)))
-            .thenReturn(
-                ResponseEntity(responseString, HttpStatus.OK)
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "p", "This is some content"))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
             )
+        )
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "p", "This is some content"))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val responseString =
+            """[{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"p","value":"This is some content"}]},{"blogId":3,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"p","value":"This is some content"}]}]"""
 
         val getBlogsResponse = mockMvc.get(blogsEndpoint)
             .andDo { print() }
             .andExpect {
                 status { isOk() }
                 content { MediaType.APPLICATION_JSON }
-                jsonPath("$[0].blogId") { value(1) }
-                jsonPath("$[1].blogId") { value(2) }
+                jsonPath("$[0].blogId") { value(2) }
+                jsonPath("$[1].blogId") { value(3) }
             }
-            .andReturn().response
+            .andReturn().response.contentAsString
 
-        val blogsJsonNode = ObjectMapper().readTree(getBlogsResponse.contentAsString)
-
-        for (node in blogsJsonNode) {
-            blogCollection.add(Blog.fromResponse(node as ObjectNode))
-        }
-
-        assertThat(blogCollection[0]).isInstanceOf(Blog::class.java)
-        assertThat(blogCollection.size).isEqualTo(2)
+        println(getBlogsResponse)
+        assertThat(getBlogsResponse).isEqualTo(responseString)
     }
 
     @Test
     fun `should return blog`() {
-        val responseString =
-            """{"blog_id":1,"title":"Test","publish_date":"2022-01-13 06:10:58.632369","content":[{"position":0,"type":"p","value":"This is some content"},{"position":1,"type":"p","value":"This is some content"}]}"""
-        whenever(fastApiRestTemplate.getForEntity(any<String>(), eq(String::class.java)))
-            .thenReturn(
-                ResponseEntity(responseString, HttpStatus.OK)
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "p", "This is some content"))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
             )
+        )
 
-        val getBlogResponse = mockMvc.get("$blogsEndpoint/1")
+        val responseString =
+            """{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"p","value":"This is some content"}]}"""
+
+        val getBlogResponse = mockMvc.get("$blogsEndpoint/2")
             .andDo { print() }
             .andExpect {
                 status { isOk() }
                 content { MediaType.APPLICATION_JSON }
-                jsonPath("$.blogId") { value(1) }
+                jsonPath("$.blogId") { value(2) }
             }
-            .andReturn().response
+            .andReturn().response.contentAsString
 
-        val blog = Blog.fromResponse(ObjectMapper().readTree(getBlogResponse.contentAsString) as ObjectNode)
-
-        assertThat(blog).isEqualTo(
-            Blog
-            (
-                1, "Test", "2022-01-13 06:10:58.632369",
-                listOf(
-                    Content(0, "p", "This is some content"),
-                    Content(1, "p", "This is some content")
-                )
-            )
-        )
+        assertThat(getBlogResponse).isEqualTo(responseString)
     }
 
     @Test
     fun `should create blog`() {
-        val requestString = """{"title": "Test", "content": [{"position": 0, "type": "p","value": "This is some content"},{"position": 1, "type": "p", "value": "This is some content"}]}"""
-        val response = CreateBlogResponse(true, 1, 2)
-        whenever(fastApiRestTemplate.postForEntity(any<String>(), any<CreateBlogRequest>(), eq(CreateBlogResponse::class.java)))
-            .thenReturn(
-                ResponseEntity(response, HttpStatus.OK)
-            )
+        val requestString =
+            """{"title": "Test", "content": [{"position": 0, "type": "p","value": "This is some content"},{"position": 1, "type": "p", "value": "This is some content"}]}"""
+        val expectedResponse = CreateBlogResponse(true, 2, 2)
 
         val postBlogResponse = mockMvc.post(blogsEndpoint) {
             content = requestString
@@ -123,7 +124,76 @@ internal class BlogControllerIntegrationTest {
 
         val createBlogResponse = (ObjectMapper().readTree(postBlogResponse) as ObjectNode).createBlogResponseObject()
 
-        assertThat(response).isEqualTo(createBlogResponse)
+        assertThat(createBlogResponse).isEqualTo(expectedResponse)
+    }
+
+    @Test
+    fun `should update blog`() {
+        val requestString =
+            """{"title": "Test", "content": [{"position": 0, "type": "p","value": "This is some content"},{"position": 1, "type": "p", "value": "This is some content"}]}"""
+        val expectedResponse = CreateBlogResponse(true, 2, 2)
+
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "p", "This is some content"))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val putBlogResponse = mockMvc.put("$blogsEndpoint/2") {
+            content = requestString
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.success") { value(true) }
+            }
+            .andReturn().response.contentAsString
+
+        val updateBlogResponse = (ObjectMapper().readTree(putBlogResponse) as ObjectNode).createBlogResponseObject()
+
+        assertThat(updateBlogResponse).isEqualTo(expectedResponse)
+    }
+
+    @Test
+    fun `should delete blog`() {
+        val expectedResponse = DeleteBlogResponse(true, 2)
+
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "p", "This is some content"))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val deleteBlogResponse = mockMvc.delete("$blogsEndpoint/2")
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.success") { value(true) }
+                jsonPath("$.deletedId") { value(2) }
+            }
+            .andReturn().response.contentAsString
+
+        val removeBlogResponse = (ObjectMapper().readTree(deleteBlogResponse) as ObjectNode).deleteBlogResponseObject()
+
+        assertThat(removeBlogResponse).isEqualTo(expectedResponse)
+        assertThat(blogRepositoryAdapter.retrieveBlog(2)).isNull()
+        assertThat(blogRepositoryAdapter.contentRepository.findAllContentByBlogId(2).size).isEqualTo(0)
+    }
+
+    private fun ObjectNode.deleteBlogResponseObject(): DeleteBlogResponse {
+        return DeleteBlogResponse(
+            success = this["success"].asBoolean(),
+            deletedId = this["deletedId"].asInt()
+        )
     }
 
     private fun ObjectNode.createBlogResponseObject(): CreateBlogResponse {
@@ -131,19 +201,6 @@ internal class BlogControllerIntegrationTest {
             success = this["success"].asBoolean(),
             createdId = this["createdId"].asInt(),
             contentAmount = this["contentAmount"].asInt()
-        )
-    }
-
-    private fun Blog.Companion.fromResponse(node: ObjectNode): Blog {
-        val contentList: MutableList<Content> = mutableListOf()
-        for (content in node["content"]) {
-            contentList.add(Content.from(content as ObjectNode))
-        }
-        return Blog(
-            node["blogId"].asInt(),
-            node["title"].textValue(),
-            node["publishDate"].textValue(),
-            contentList
         )
     }
 }
