@@ -19,4 +19,24 @@ internal class BlogTest {
         assertThat(blog.publishDate).isEqualTo(publishDate)
         assertThat(blog.content).isEqualTo(listOf(Content(0, "p", "content goes here")))
     }
+
+    @Test
+    fun `should provide publishDate if publishDate is null`() {
+        val content: List<Content> = listOf(Content(0, "p", "content goes here"))
+        val blog = Blog(blogId = 1, title = "My First Blog", publishDate = null, content = content)
+
+        blog.providePublishDate()
+
+        assertThat(blog.publishDate).isInstanceOf(LocalDate::class.java)
+    }
+
+    @Test
+    fun `should not provide publishDate if publishDate is not null`() {
+        val content: List<Content> = listOf(Content(0, "p", "content goes here"))
+        val blog = Blog(blogId = 1, title = "My First Blog", publishDate = publishDate, content = content)
+
+        blog.providePublishDate()
+
+        assertThat(blog.publishDate).isEqualTo(publishDate)
+    }
 }

@@ -26,4 +26,10 @@ data class Blog(
             )
         }
     }
+
+    fun providePublishDate() {
+        if (publishDate == null) {
+            publishDate = LocalDate.now()
+        }
+    }
 }

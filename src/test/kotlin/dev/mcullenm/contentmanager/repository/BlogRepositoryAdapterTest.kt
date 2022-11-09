@@ -84,6 +84,20 @@ internal class BlogRepositoryAdapterTest {
     }
 
     @Test
+    fun `should save blog with id if provided`() {
+        val content: List<Content> = listOf(Content(0, "p", "content goes here"))
+        val blog = Blog(blogId = 1000, title = "My First Blog", publishDate = publishDate, content = content)
+
+        val actualResponse = blogRepositoryAdapter.createBlog(blog)
+        val actualRetrieved = blogRepositoryAdapter.retrieveBlog(actualResponse.createdId)
+
+        assertThat(actualResponse).isInstanceOf(CreateBlogResponse::class.java)
+        assertThat(actualResponse.success).isTrue
+        assertThat(actualResponse.contentAmount).isEqualTo(content.size)
+        assertThat(actualRetrieved).isEqualTo(blog).usingRecursiveComparison()
+    }
+
+    @Test
     fun `should update blog`() {
         val content: List<Content> = listOf(Content(0, "p", "content goes here"))
         val blog = Blog(blogId = null, title = "My First Blog", publishDate = publishDate, content = content)
@@ -99,6 +113,20 @@ internal class BlogRepositoryAdapterTest {
         assertThat(actualResponse.createdId).isEqualTo(blogId)
         assertThat(actualResponse.contentAmount).isEqualTo(content.size)
         assertThat(actualRetrieved).isEqualTo(expected).usingRecursiveComparison()
+    }
+
+    @Test
+    fun `should return response with success = false when updating a blog that does not exist`() {
+        val content: List<Content> = listOf(Content(0, "p", "content goes here"))
+        val updatedBlog = Blog(blogId = null, title = "My First Blog", publishDate = publishDate, content = content)
+        val blogId = 1000
+
+        val actualResponse = blogRepositoryAdapter.updateBlog(blogId, updatedBlog)
+
+        assertThat(actualResponse).isInstanceOf(CreateBlogResponse::class.java)
+        assertThat(actualResponse.success).isFalse
+        assertThat(actualResponse.createdId).isEqualTo(blogId)
+        assertThat(actualResponse.contentAmount).isEqualTo(0)
     }
 
     @Test

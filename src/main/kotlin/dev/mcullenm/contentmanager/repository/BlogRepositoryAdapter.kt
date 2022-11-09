@@ -14,8 +14,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
-import javax.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 
 @Primary
 @Repository
@@ -43,23 +42,43 @@ class BlogRepositoryAdapter(
     @Transactional
     override fun createBlog(blog: Blog): CreateBlogResponse {
         try {
-            if (blog.publishDate == null) { blog.publishDate = LocalDate.now() }
-            return blogRepository.save(BlogEntity.from(blog)).id?.let { blogId ->
-                CreateBlogResponse(
-                    success = true,
-                    createdId = blogId,
-                    contentAmount = contentRepository.saveAll(blog.content.toContentEntityList(blogId)).size
-                )
-            } ?: throw NullFieldException("blog.id", BlogRepositoryAdapter::createBlog.toString())
+            blog.providePublishDate()
+            blog.blogId?.let {
+                return createBlogWithProvidedId(blog)
+            }
+            return createBlogWithSeqId(blog)
         } catch (e: Exception) {
             throw FailureResponse("CREATE_BLOG", e.message ?: "", e)
         }
     }
 
     @Transactional
+    private fun createBlogWithSeqId(blog: Blog): CreateBlogResponse {
+        return blogRepository.save(BlogEntity.from(blog)).id?.let { blogId ->
+            CreateBlogResponse(
+                success = true,
+                createdId = blogId,
+                contentAmount = contentRepository.saveAll(blog.content.toContentEntityList(blogId)).size
+            )
+        } ?: throw NullFieldException("blog.id", BlogRepositoryAdapter::createBlog.toString())
+    }
+
+    @Transactional
+    private fun createBlogWithProvidedId(blog: Blog): CreateBlogResponse {
+        blogRepository.saveWithId(blog.publishDate!!, blog.title, blog.blogId!!)
+        return blogRepository.findByIdOrNull(blog.blogId)?.id?.let { blogId ->
+            CreateBlogResponse(
+                success = true,
+                createdId = blogId,
+                contentAmount = contentRepository.saveAll(blog.content.toContentEntityList(blogId)).size
+            )
+        } ?: throw Exception("Failed to create blog with specified ID")
+    }
+
+    @Transactional
     override fun updateBlog(id: Int, blog: Blog): CreateBlogResponse {
         try {
-            blogRepository.getReferenceById(id).let { blogEntity ->
+            blogRepository.findByIdOrNull(id)?.let { blogEntity ->
                 blogEntity.title = blog.title
                 contentRepository.deleteAllContentByBlogId(id)
                 blogRepository.save(blogEntity)
@@ -68,7 +87,11 @@ class BlogRepositoryAdapter(
                     createdId = id,
                     contentAmount = contentRepository.saveAll(blog.content.toContentEntityList(id)).size
                 )
-            }
+            } ?: return CreateBlogResponse(
+                success = false,
+                createdId = id,
+                contentAmount = 0
+            )
         } catch (e: Exception) {
             throw FailureResponse("UPDATE_BLOG", e.message ?: "", e)
         }

@@ -18,6 +18,17 @@ class BlogService(
         }
         return blogDataSource.createBlog(createBlogRequest.toBlog())
     }
-    fun updateBlog(id: Int, createBlogRequest: CreateBlogRequest) = blogDataSource.updateBlog(id, createBlogRequest.toBlog())
+
+    fun updateBlog(id: Int, createBlogRequest: CreateBlogRequest): CreateBlogResponse {
+        createBlogRequest.toBlog().let { blog ->
+            blogDataSource.updateBlog(id, blog).let { response ->
+                if (response.success) {
+                    return response
+                }
+                return blogDataSource.createBlog(blog.copy(blogId = id))
+            }
+        }
+    }
+
     fun deleteBlog(id: Int) = blogDataSource.removeBlog(id)
 }

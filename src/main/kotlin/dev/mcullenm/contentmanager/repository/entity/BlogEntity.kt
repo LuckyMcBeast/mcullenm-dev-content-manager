@@ -4,7 +4,6 @@ import dev.mcullenm.contentmanager.model.Blog
 import org.hibernate.Hibernate
 import org.springframework.data.annotation.CreatedDate
 import java.time.LocalDate
-import java.util.*
 import javax.persistence.*
 
 @Entity

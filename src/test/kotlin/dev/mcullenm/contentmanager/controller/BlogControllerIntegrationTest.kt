@@ -160,6 +160,29 @@ internal class BlogControllerIntegrationTest {
     }
 
     @Test
+    fun `should create blog if blog if blog does not exist`() {
+        val requestString =
+            """{"title": "Test", "content": [{"position": 0, "type": "p","value": "This is some content"},{"position": 1, "type": "p", "value": "This is some content"}]}"""
+        val expectedResponse = CreateBlogResponse(true, 100, 2)
+
+        val putBlogResponse = mockMvc.put("$blogsEndpoint/100") {
+            content = requestString
+            contentType = MediaType.APPLICATION_JSON
+        }
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.success") { value(true) }
+            }
+            .andReturn().response.contentAsString
+
+        val updateBlogResponse = (ObjectMapper().readTree(putBlogResponse) as ObjectNode).createBlogResponseObject()
+
+        assertThat(updateBlogResponse).isEqualTo(expectedResponse)
+    }
+
+    @Test
     fun `should delete blog`() {
         val expectedResponse = DeleteBlogResponse(true, 2)
 

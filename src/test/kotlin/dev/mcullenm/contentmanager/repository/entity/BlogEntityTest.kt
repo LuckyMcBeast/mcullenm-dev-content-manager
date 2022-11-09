@@ -12,7 +12,7 @@ internal class BlogEntityTest {
         LocalDate.of(2021, 12, 9)
 
     @Test
-    fun `should create BlogEntity from Blog`() {
+    fun `should create BlogEntity from Blog without id`() {
         val content: List<Content> = listOf(Content(0, "p", "content goes here"))
         val blog = Blog(blogId = null, title = "My First Blog", publishDate = publishDate, content = content)
         val expected = BlogEntity(null, "My First Blog", publishDate = publishDate)
