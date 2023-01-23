@@ -3,6 +3,7 @@ package dev.mcullenm.contentmanager.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.mcullenm.contentmanager.model.Content
+import dev.mcullenm.contentmanager.model.Meta
 import dev.mcullenm.contentmanager.model.request.CreateBlogRequest
 import dev.mcullenm.contentmanager.model.response.CreateBlogResponse
 import dev.mcullenm.contentmanager.model.response.DeleteBlogResponse
@@ -91,6 +92,58 @@ internal class BlogControllerIntegrationTest {
 
         val responseString =
             """{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"p","value":"This is some content"}]}"""
+
+        val getBlogResponse = mockMvc.get("$blogsEndpoint/2")
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.blogId") { value(2) }
+            }
+            .andReturn().response.contentAsString
+
+        assertThat(getBlogResponse).isEqualTo(responseString)
+    }
+
+    @Test
+    fun `should return blog with code content containing language metadata`() {
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "code", value = """val test : String = "test"""", meta = Meta(lang = "kotlin")))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val responseString =
+            """{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"code","value":"val test : String = \"test\"","meta":{"lang":"kotlin"}}]}"""
+
+        val getBlogResponse = mockMvc.get("$blogsEndpoint/2")
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.blogId") { value(2) }
+            }
+            .andReturn().response.contentAsString
+
+        assertThat(getBlogResponse).isEqualTo(responseString)
+    }
+
+    @Test
+    fun `should return blog with link (a) content containing altText`() {
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(Content(position = 1, type = "a", value = "https://mcullenm.dev", meta = Meta(altText = "This Blog")))
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val responseString =
+            """{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":1,"type":"a","value":"https://mcullenm.dev","meta":{"altText":"This Blog"}}]}"""
 
         val getBlogResponse = mockMvc.get("$blogsEndpoint/2")
             .andDo { print() }

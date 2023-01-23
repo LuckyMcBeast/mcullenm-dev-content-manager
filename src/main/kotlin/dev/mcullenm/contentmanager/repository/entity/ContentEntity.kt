@@ -23,7 +23,9 @@ data class ContentEntity(
     @Id val position: Int = 0,
     val type: String,
     @Column(columnDefinition = "TEXT")
-    val value: String
+    val value: String,
+    @Column(columnDefinition = "TEXT")
+    val meta: String? = null
 ) {
     companion object {
         fun from(blogId: Int, content: Content): ContentEntity {
@@ -31,7 +33,8 @@ data class ContentEntity(
                 blogId = blogId,
                 position = content.position,
                 type = content.type,
-                value = content.value
+                value = content.value,
+                meta = content.meta?.toJsonString()
             )
         }
     }
@@ -49,7 +52,7 @@ data class ContentEntity(
 
     @Override
     override fun toString(): String {
-        return this::class.simpleName + "(blogId = $blogId , position = $position , type = $type , value = $value )"
+        return this::class.simpleName + "(blogId = $blogId , position = $position , type = $type , value = $value, meta = $meta )"
     }
 }
 
