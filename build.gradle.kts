@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "dev.mcullenm"
-version = "0.4.1"
+version = "0.5.0"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
