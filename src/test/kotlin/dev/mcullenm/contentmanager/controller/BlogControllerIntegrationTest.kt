@@ -106,6 +106,36 @@ internal class BlogControllerIntegrationTest {
     }
 
     @Test
+    fun `should return blog with sorted content`() {
+        blogRepositoryAdapter.createBlog(
+            CreateBlogRequest(
+                title = "Test",
+                content = listOf(
+                    Content(position = 2, type = "p", "This is some content"),
+                    Content(position = 0, type = "p", "This is some content"),
+                    Content(position = 1, type = "p", "This is some content")
+                )
+            ).toBlog(
+                LocalDate.parse("2022-01-13")
+            )
+        )
+
+        val responseString =
+            """{"blogId":2,"title":"Test","publishDate":"01-13-2022","content":[{"position":0,"type":"p","value":"This is some content"},{"position":1,"type":"p","value":"This is some content"},{"position":2,"type":"p","value":"This is some content"}]}"""
+
+        val getBlogResponse = mockMvc.get("$blogsEndpoint/2")
+            .andDo { print() }
+            .andExpect {
+                status { isOk() }
+                content { MediaType.APPLICATION_JSON }
+                jsonPath("$.blogId") { value(2) }
+            }
+            .andReturn().response.contentAsString
+
+        assertThat(getBlogResponse).isEqualTo(responseString)
+    }
+
+    @Test
     fun `should return blog with code content containing language metadata`() {
         blogRepositoryAdapter.createBlog(
             CreateBlogRequest(

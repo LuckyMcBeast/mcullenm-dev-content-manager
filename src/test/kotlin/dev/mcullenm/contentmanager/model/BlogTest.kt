@@ -21,6 +21,23 @@ internal class BlogTest {
     }
 
     @Test
+    fun `should return content ordered by position`() {
+        val content: List<Content> = listOf(
+            Content(1, "p", "content goes here"),
+            Content(0, "p", "content goes here"),
+            Content(2, "p", "content goes here")
+        )
+        val blog = Blog(blogId = 1, title = "My First Blog", publishDate = publishDate, content = content)
+        val expected = listOf(
+            Content(0, "p", "content goes here"),
+            Content(1, "p", "content goes here"),
+            Content(2, "p", "content goes here")
+        )
+
+        assertThat(blog.sortedContent).isEqualTo(expected)
+    }
+
+    @Test
     fun `should provide publishDate if publishDate is null`() {
         val content: List<Content> = listOf(Content(0, "p", "content goes here"))
         val blog = Blog(blogId = 1, title = "My First Blog", publishDate = null, content = content)
