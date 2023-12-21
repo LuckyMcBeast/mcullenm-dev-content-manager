@@ -1,0 +1,14 @@
+[Unit]
+Description=Database for mcullenm.dev
+PartOf=mcullenm-dev-backend.service
+After=mcullenm-dev-backend.service
+
+[Service]
+User=luckymcbeast
+ExecStart=docker start mcullenm_dev_db
+ExecStop=docker stop mcullenm_dev_db
+RemainAfterExit=yes
+Restart=on-failure
+
+[Install]
+WantedBy=mcullenm-dev-backend.service

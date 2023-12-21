@@ -1,0 +1,13 @@
+[Unit]
+Description=Kotlin Spring Boot Webservice for mcullenm.dev
+PartOf=mcullenm-dev-backend.service
+After=mcullenm-dev-backend.service
+After=mcullenm-dev-db.service
+
+[Service]
+User=luckymcbeast
+ExecStart=java -jar /home/luckymcbeast/mcullenm.dev/deploy/content-manager-0.5.1.jar
+Restart=on-failure
+
+[Install]
+WantedBy=mcullenm-dev-backend.service

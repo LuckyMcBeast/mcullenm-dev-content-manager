@@ -1,0 +1,13 @@
+[Unit]
+Description=Content Management System for mcullenm.dev
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+User=luckymcbeast
+ExecStart=/bin/true
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
